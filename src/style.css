@@ -94,7 +94,6 @@ button:focus-visible {
   }
 }
 
-
 canvas {
   border-radius: 30px;
   border: 4mm ridge rgb(255, 125, 192);
