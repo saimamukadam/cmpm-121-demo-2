@@ -3,9 +3,11 @@ import "./style.css";
 // creating new marker class
 class MarkerLine {
     private points: { x: number; y:number }[];
+    private thickness: number;
 
-    constructor(initialX: number, initialY:number) {
-        this.points = [{ x: initialX, y: initialY}];
+    constructor(initialX: number, initialY: number, thickness: number) {
+        this.points = [{ x: initialX, y: initialY }];
+        this.thickness = thickness;
     }
 
     drag(x: number, y: number) {
@@ -20,7 +22,7 @@ class MarkerLine {
                 ctx.lineTo(point.x, point.y);
             }
             ctx.strokeStyle = "black";
-            ctx.lineWidth = 1;
+            ctx.lineWidth = this.thickness;
             ctx.stroke();
             ctx.closePath();
         }
@@ -53,25 +55,19 @@ ctx.fillRect(10, 10, 150, 100);
 
 // marker drawing on canvas
 let isDrawing = false;
-// let points: Array<Array<{ x: number, y: number }>> = [[]]; 
-// let currentLine: { x: number, y: number }[] = [];
 let currentLine: MarkerLine | null = null;
 let lines: MarkerLine[] = [];
-//let redoStack: Array<Array<{ x: number, y: number }>> = [];
 let redoStack: MarkerLine[] = [];
+let currentThickness = 1;
 
 canvas.addEventListener("mousedown", (e: MouseEvent) => {
     isDrawing = true;
-    // currentLine = [{ x: e.offsetX, y: e.offsetY }];
-    currentLine = new MarkerLine(e.offsetX, e.offsetY);
+    currentLine = new MarkerLine(e.offsetX, e.offsetY, currentThickness);
 });
 
 canvas.addEventListener("mousemove", (e: MouseEvent) => {
     if (isDrawing && currentLine) {
-        // currentLine.push({ x: e.offsetX, y: e.offsetY });
         currentLine.drag(e.offsetX, e.offsetY);
-        // const event = new CustomEvent("drawing changed");
-        // canvas.dispatchEvent(event);
         clearAndRedraw();
     }
 });
@@ -88,10 +84,6 @@ canvas.addEventListener("mouseup", () => {
 canvas.addEventListener("mouseout", () => {
     isDrawing = false;
 });
-
-//canvas.addEventListener("drawing changed", () => {
-  //  clearAndRedraw();
-//});
 
 function clearAndRedraw() {
     if (!ctx) return; // had to add so ctx errors go away
@@ -114,7 +106,6 @@ const clearButton = document.createElement("button");
 clearButton.innerHTML = "Clear Canvas";
 clearButton.addEventListener("click", () => {
     lines = [];
-    //points = [];
     redoStack = [];
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 });
@@ -129,8 +120,6 @@ undoButton.addEventListener("click", () => {
         if (lastLine) {
             redoStack.push(lastLine);
         }
-        //const event = new CustomEvent("drawing changed");
-        //canvas.dispatchEvent(event);
         clearAndRedraw();
     }
 });
@@ -145,9 +134,32 @@ redoButton.addEventListener("click", () => {
         if (lastRedo) {
             lines.push(lastRedo);
         }
-        //const event = new CustomEvent("drawing changed");
-        //canvas.dispatchEvent(event);
         clearAndRedraw();
     }
 });
 app.append(redoButton);
+
+// thin button
+const thinButton = document.createElement("button");
+thinButton.innerHTML = "Thin";
+thinButton.addEventListener("click", () => {
+    currentThickness = 1;
+    setSelectedTool(thinButton);
+});
+app.append(thinButton);
+
+// thick button
+const thickButton = document.createElement("button");
+thickButton.innerHTML = "Thick";
+thickButton.addEventListener("click", () => {
+    currentThickness = 5;
+    setSelectedTool(thickButton);
+});
+app.append(thickButton);
+
+// selected tool function
+function setSelectedTool(selectedButton: HTMLButtonElement) {
+    thinButton.classList.remove("selectedTool");
+    thickButton.classList.remove("selectedTool");
+    selectedButton.classList.add("selectedTool");
+}

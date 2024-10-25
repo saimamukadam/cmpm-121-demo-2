@@ -99,3 +99,8 @@ canvas {
   border: 4mm ridge rgb(255, 125, 192);
   filter: drop-shadow(20px 16px 4px #fab4dd);
 }
+
+.selectedTool {
+  background-color: lightgray;
+  border: 2px solid black;
+}
