@@ -29,6 +29,32 @@ class MarkerLine {
     }
 }
 
+// tool preview class
+class ToolPreview {
+    private x: number;
+    private y: number;
+    private thickness: number;
+
+    constructor(x: number, y: number, thickness: number) {
+        this.x = x;
+        this.y = y;
+        this.thickness = thickness;
+    }
+
+    update(x: number, y: number) {
+        this.x = x;
+        this.y = y;
+    }
+
+    draw(ctx: CanvasRenderingContext2D) {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.thickness / 2, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(0, 0, 0, 0.5)"; 
+        ctx.fill();
+        ctx.closePath();
+    }
+}
+
 const APP_NAME = "Saima's sticker sketchpad";
 const app = document.querySelector<HTMLDivElement>("#app")!;
 
@@ -59,6 +85,7 @@ let currentLine: MarkerLine | null = null;
 let lines: MarkerLine[] = [];
 let redoStack: MarkerLine[] = [];
 let currentThickness = 1;
+let toolPreview: ToolPreview | null = null;
 
 canvas.addEventListener("mousedown", (e: MouseEvent) => {
     isDrawing = true;
@@ -69,6 +96,13 @@ canvas.addEventListener("mousemove", (e: MouseEvent) => {
     if (isDrawing && currentLine) {
         currentLine.drag(e.offsetX, e.offsetY);
         clearAndRedraw();
+    } else if (!isDrawing) {
+        if (!toolPreview) {
+            toolPreview = new ToolPreview(e.offsetX, e.offsetY, currentThickness);
+        } else {
+            toolPreview.update(e.offsetX, e.offsetY);
+        }
+        clearAndRedraw();
     }
 });
 
@@ -78,11 +112,15 @@ canvas.addEventListener("mouseup", () => {
         redoStack = [];
         isDrawing = false;
         currentLine = null;
+        toolPreview = null;
+        clearAndRedraw();
     }
 });
 
 canvas.addEventListener("mouseout", () => {
     isDrawing = false;
+    toolPreview = null;
+    clearAndRedraw();
 });
 
 function clearAndRedraw() {
@@ -98,6 +136,10 @@ function clearAndRedraw() {
 
     if (currentLine) {
         currentLine.display(ctx);
+    }
+
+    if (!isDrawing && toolPreview) {
+        toolPreview.draw(ctx);
     }
 }
 
