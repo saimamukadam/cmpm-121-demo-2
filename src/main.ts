@@ -55,6 +55,28 @@ class ToolPreview {
     }
 }
 
+class Sticker {
+    private emoji: string;
+    private x: number;
+    private y: number;
+
+    constructor(emoji: string, x: number, y: number) {
+        this.emoji = emoji;
+        this.x = x;
+        this.y = y;
+    }
+    
+    updatePosition(x: number, y: number) {
+        this.x = x;
+        this.y = y;
+    }
+
+    draw(ctx: CanvasRenderingContext2D) {
+        ctx.font = `${currentThickness * 2}px Arial`;
+        ctx.fillText(this.emoji, this.x, this.y);
+    }
+}
+
 const APP_NAME = "Saima's sticker sketchpad";
 const app = document.querySelector<HTMLDivElement>("#app")!;
 
@@ -82,14 +104,21 @@ ctx.fillRect(10, 10, 150, 100);
 // marker drawing on canvas
 let isDrawing = false;
 let currentLine: MarkerLine | null = null;
-let lines: MarkerLine[] = [];
-let redoStack: MarkerLine[] = [];
+let lines: (MarkerLine | Sticker)[] = [];
+let redoStack: (MarkerLine | Sticker)[] = [];
 let currentThickness = 1;
 let toolPreview: ToolPreview | null = null;
+let currentSticker: Sticker | null = null;
 
 canvas.addEventListener("mousedown", (e: MouseEvent) => {
-    isDrawing = true;
-    currentLine = new MarkerLine(e.offsetX, e.offsetY, currentThickness);
+    if (currentSticker) {
+        currentSticker.updatePosition(e.offsetX, e.offsetY);
+        lines.push(currentSticker);
+        currentSticker = null;
+    } else {
+        isDrawing = true;
+        currentLine = new MarkerLine(e.offsetX, e.offsetY, currentThickness);
+    }
 });
 
 canvas.addEventListener("mousemove", (e: MouseEvent) => {
@@ -97,7 +126,9 @@ canvas.addEventListener("mousemove", (e: MouseEvent) => {
         currentLine.drag(e.offsetX, e.offsetY);
         clearAndRedraw();
     } else if (!isDrawing) {
-        if (!toolPreview) {
+        if (currentSticker) {
+            currentSticker.updatePosition(e.offsetX, e.offsetY);
+        } else if (!toolPreview) {
             toolPreview = new ToolPreview(e.offsetX, e.offsetY, currentThickness);
         } else {
             toolPreview.update(e.offsetX, e.offsetY);
@@ -123,6 +154,24 @@ canvas.addEventListener("mouseout", () => {
     clearAndRedraw();
 });
 
+// EMOJIS
+const emojis = ["😝", "🤪", "💖"];
+const stickerButtons: HTMLButtonElement[] = [];
+
+emojis.forEach((emoji) => {
+    const button = document.createElement("button");
+    button.innerHTML = emoji;
+    button.addEventListener("click", (e) => {
+        canvas.dispatchEvent(new MouseEvent("mousemove", {
+            clientX: e.clientX,
+            clientY: e.clientY,
+        }));
+        currentSticker = new Sticker(emoji, 0, 0);
+    });
+    stickerButtons.push(button);
+    app.append(button);
+});
+
 function clearAndRedraw() {
     if (!ctx) return; // had to add so ctx errors go away
 
@@ -131,7 +180,11 @@ function clearAndRedraw() {
     ctx.fillRect(10, 10, 150, 100); 
 
     for (const line of lines) {
-        line.display(ctx);
+        if(line instanceof MarkerLine) {
+            line.display(ctx);
+        } else if (line instanceof Sticker) {
+            line.draw(ctx);
+        }
     }
 
     if (currentLine) {
@@ -140,6 +193,10 @@ function clearAndRedraw() {
 
     if (!isDrawing && toolPreview) {
         toolPreview.draw(ctx);
+    }
+
+    if (currentSticker) {
+        currentSticker.draw(ctx);
     }
 }
 
