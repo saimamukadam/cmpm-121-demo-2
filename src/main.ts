@@ -77,7 +77,7 @@ class Sticker {
     }
 }
 
-const APP_NAME = "Saima's sticker sketchpad";
+const APP_NAME = "cute and kawaii sticker sketchpad";
 const app = document.querySelector<HTMLDivElement>("#app")!;
 
 // adding app title in h1 element
@@ -153,24 +153,6 @@ canvas.addEventListener("mouseout", () => {
     toolPreview = null;
     clearAndRedraw();
 });
-
-// EMOJIS
-//const emojis = ["😝", "🤪", "💖"];
-//const stickerButtons: HTMLButtonElement[] = [];
-
-//emojis.forEach((emoji) => {
-//    const button = document.createElement("button");
-//    button.innerHTML = emoji;
-//    button.addEventListener("click", (e) => {
-//        canvas.dispatchEvent(new MouseEvent("mousemove", {
-//            clientX: e.clientX,
-//            clientY: e.clientY,
-//        }));
-//        currentSticker = new Sticker(emoji, 0, 0);
-//    });
-//    stickerButtons.push(button);
-//    app.append(button);
-//});
 
 // STEP 9:
 const stickerData = [
@@ -304,3 +286,33 @@ function setSelectedTool(selectedButton: HTMLButtonElement) {
     thickButton.classList.remove("selectedTool");
     selectedButton.classList.add("selectedTool");
 }
+
+// STEP 10 export button
+const exportButton = document.createElement("button");
+exportButton.innerHTML = "Export as PNG";
+exportButton.addEventListener("click", () => {
+    const exportCanvas = document.createElement("canvas");
+    exportCanvas.width = 1024;
+    exportCanvas.height = 1024;
+    const exportCtx = exportCanvas.getContext("2d");
+
+    if (!exportCtx) {
+        throw new Error("No export canvas context");
+    }
+
+    exportCtx.scale(4, 4);
+
+    for (const line of lines) {
+        if (line instanceof MarkerLine) {
+            line.display(exportCtx);
+        } else if (line instanceof Sticker) {
+            line.draw(exportCtx);
+        }
+    }
+
+    const anchor = document.createElement("a");
+    anchor.href = exportCanvas.toDataURL("image/png");
+    anchor.download = "sketchpad.png";
+    anchor.click();
+});
+app.append(exportButton);
