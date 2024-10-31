@@ -4,10 +4,14 @@ import "./style.css";
 class MarkerLine {
     private points: { x: number; y:number }[];
     private thickness: number;
+    private color: string;
+    private rotation: number;
 
-    constructor(initialX: number, initialY: number, thickness: number) {
+    constructor(initialX: number, initialY: number, thickness: number, color: string, rotation: number) {
         this.points = [{ x: initialX, y: initialY }];
         this.thickness = thickness;
+        this.color = color;
+        this.rotation = rotation;
     }
 
     drag(x: number, y: number) {
@@ -21,7 +25,7 @@ class MarkerLine {
             for (const point of this.points) {
                 ctx.lineTo(point.x, point.y);
             }
-            ctx.strokeStyle = "black";
+            ctx.strokeStyle = this.color;
             ctx.lineWidth = this.thickness;
             ctx.stroke();
             ctx.closePath();
@@ -34,11 +38,15 @@ class ToolPreview {
     private x: number;
     private y: number;
     private thickness: number;
+    private color: string;
+    private rotation: number;
 
-    constructor(x: number, y: number, thickness: number) {
+    constructor(x: number, y: number, thickness: number, color: string, rotation: number) {
         this.x = x;
         this.y = y;
         this.thickness = thickness;
+        this.color = color;
+        this.rotation = rotation;
     }
 
     update(x: number, y: number) {
@@ -47,11 +55,15 @@ class ToolPreview {
     }
 
     draw(ctx: CanvasRenderingContext2D) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rotation * Math.PI / 180);
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.thickness / 2, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(0, 0, 0, 0.5)"; 
+        ctx.arc(0, 0, this.thickness / 2, 0, Math.PI * 2);
+        ctx.fillStyle = this.color; 
         ctx.fill();
-        ctx.closePath();
+        // ctx.closePath();
+        ctx.restore();
     }
 }
 
@@ -101,6 +113,11 @@ if (!ctx) {
 ctx.fillStyle = "pink";
 ctx.fillRect(10, 10, 150, 100);
 
+const colorPicker = document.createElement("input");
+colorPicker.type = "color";
+colorPicker.value = "#000000";
+app.append(colorPicker);
+
 // marker drawing on canvas
 let isDrawing = false;
 let currentLine: MarkerLine | null = null;
@@ -117,7 +134,10 @@ canvas.addEventListener("mousedown", (e: MouseEvent) => {
         currentSticker = null;
     } else {
         isDrawing = true;
-        currentLine = new MarkerLine(e.offsetX, e.offsetY, currentThickness);
+        const selectedColor = getRandomColor();
+        const randomRotation = getRandomRotation();
+        currentLine = new MarkerLine(e.offsetX, e.offsetY, currentThickness, selectedColor, randomRotation);    
+        toolPreview = new ToolPreview(e.offsetX, e.offsetY, currentThickness, selectedColor, randomRotation);
     }
 });
 
@@ -129,7 +149,9 @@ canvas.addEventListener("mousemove", (e: MouseEvent) => {
         if (currentSticker) {
             currentSticker.updatePosition(e.offsetX, e.offsetY);
         } else if (!toolPreview) {
-            toolPreview = new ToolPreview(e.offsetX, e.offsetY, currentThickness);
+            const randomColor = getRandomColor();
+            const randomRotation = getRandomRotation();
+            toolPreview = new ToolPreview(e.offsetX, e.offsetY, currentThickness, randomColor, randomRotation);
         } else {
             toolPreview.update(e.offsetX, e.offsetY);
         }
@@ -168,11 +190,12 @@ stickerData.forEach(({ emoji }) => {
     const button = document.createElement("button");
     button.innerHTML = emoji;
     button.addEventListener("click", (e) => {
-        canvas.dispatchEvent(new MouseEvent("mousemove", {
-            clientX: e.clientX,
-            clientY: e.clientY,
-        }));
+        const randomColor = getRandomColor();
+        const randomRotation = getRandomRotation();
+        toolPreview = new ToolPreview(0, 0, currentThickness, randomColor, randomRotation);
+        toolPreview.draw(ctx);
         currentSticker = new Sticker(emoji, 0, 0);
+        currentLine = new MarkerLine(e.offsetX, e.offsetY, currentThickness, randomColor, randomRotation);
     });
     app.append(button);
 });
@@ -274,7 +297,11 @@ const thinButton = document.createElement("button");
 thinButton.innerHTML = "Thin";
 thinButton.addEventListener("click", () => {
     currentThickness = THIN_THICKNESS;
+    const randomColor = getRandomColor();
+    const randomRotation = getRandomRotation();
     setSelectedTool(thinButton);
+    toolPreview = new ToolPreview(0, 0, currentThickness, randomColor, randomRotation);
+    toolPreview.draw(ctx);
 });
 app.append(thinButton);
 
@@ -283,7 +310,11 @@ const thickButton = document.createElement("button");
 thickButton.innerHTML = "Thick";
 thickButton.addEventListener("click", () => {
     currentThickness = THICK_THICKNESS;
+    const randomColor = getRandomColor();
+    const randomRotation = getRandomRotation();
     setSelectedTool(thickButton);
+    toolPreview = new ToolPreview(0, 0, currentThickness, randomColor, randomRotation);
+    toolPreview.draw(ctx);
 });
 app.append(thickButton);
 
@@ -323,3 +354,16 @@ exportButton.addEventListener("click", () => {
     anchor.click();
 });
 app.append(exportButton);
+
+function getRandomColor(): string {
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+}
+
+function getRandomRotation(): number {
+    return Math.floor(Math.random() * 360);
+}
