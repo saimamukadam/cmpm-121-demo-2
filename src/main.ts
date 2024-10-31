@@ -155,10 +155,31 @@ canvas.addEventListener("mouseout", () => {
 });
 
 // EMOJIS
-const emojis = ["😝", "🤪", "💖"];
-const stickerButtons: HTMLButtonElement[] = [];
+//const emojis = ["😝", "🤪", "💖"];
+//const stickerButtons: HTMLButtonElement[] = [];
 
-emojis.forEach((emoji) => {
+//emojis.forEach((emoji) => {
+//    const button = document.createElement("button");
+//    button.innerHTML = emoji;
+//    button.addEventListener("click", (e) => {
+//        canvas.dispatchEvent(new MouseEvent("mousemove", {
+//            clientX: e.clientX,
+//            clientY: e.clientY,
+//        }));
+//        currentSticker = new Sticker(emoji, 0, 0);
+//    });
+//    stickerButtons.push(button);
+//    app.append(button);
+//});
+
+// STEP 9:
+const stickerData = [
+    { emoji: "😝" },
+    { emoji: "🤪" },
+    { emoji: "💖" },
+];
+
+stickerData.forEach(({ emoji }) => {
     const button = document.createElement("button");
     button.innerHTML = emoji;
     button.addEventListener("click", (e) => {
@@ -168,9 +189,30 @@ emojis.forEach((emoji) => {
         }));
         currentSticker = new Sticker(emoji, 0, 0);
     });
-    stickerButtons.push(button);
     app.append(button);
 });
+
+// add custom sticker button
+const customStickerButton = document.createElement("button");
+customStickerButton.innerHTML = "Add a Custom Sticker";
+customStickerButton.addEventListener("click", () => {
+    const customEmoji = prompt("Enter a sticker emoji: ", "😊");
+    if (customEmoji) {
+        stickerData.push({ emoji: customEmoji });
+
+        const button = document.createElement("button");
+        button.innerHTML = customEmoji;
+        button.addEventListener("click", (e: MouseEvent) => {
+            canvas.dispatchEvent(new MouseEvent("mousemove", {
+                clientX: e.clientX,
+                clientY: e.clientY,
+            }));
+            currentSticker = new Sticker(customEmoji, 0, 0);
+        });
+        app.append(button);
+    }
+});
+app.append(customStickerButton);
 
 function clearAndRedraw() {
     if (!ctx) return; // had to add so ctx errors go away
