@@ -104,3 +104,17 @@ canvas {
   background-color: lightgray;
   border: 2px solid black;
 }
+
+button {
+  background-color: #fcdce6;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 15px;
+  margin: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+button:hover {
+  background-color: #edc3d0;
+}

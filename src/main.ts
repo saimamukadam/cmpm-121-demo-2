@@ -72,7 +72,7 @@ class Sticker {
     }
 
     draw(ctx: CanvasRenderingContext2D) {
-        ctx.font = `${currentThickness * 2}px Arial`;
+        ctx.font = `${currentThickness * 3}px Arial`;
         ctx.fillText(this.emoji, this.x, this.y);
     }
 }
@@ -159,6 +159,9 @@ const stickerData = [
     { emoji: "😝" },
     { emoji: "🤪" },
     { emoji: "💖" },
+    { emoji: "🎀" },
+    { emoji: "🌸" },
+    { emoji: "🐾" },
 ];
 
 stickerData.forEach(({ emoji }) => {
@@ -262,11 +265,15 @@ redoButton.addEventListener("click", () => {
 });
 app.append(redoButton);
 
+// STEP 11
+const THIN_THICKNESS = 2;
+const THICK_THICKNESS = 8;
+
 // thin button
 const thinButton = document.createElement("button");
 thinButton.innerHTML = "Thin";
 thinButton.addEventListener("click", () => {
-    currentThickness = 1;
+    currentThickness = THIN_THICKNESS;
     setSelectedTool(thinButton);
 });
 app.append(thinButton);
@@ -275,7 +282,7 @@ app.append(thinButton);
 const thickButton = document.createElement("button");
 thickButton.innerHTML = "Thick";
 thickButton.addEventListener("click", () => {
-    currentThickness = 5;
+    currentThickness = THICK_THICKNESS;
     setSelectedTool(thickButton);
 });
 app.append(thickButton);
