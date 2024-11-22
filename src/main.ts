@@ -1,5 +1,30 @@
 import "./style.css";
 
+// Contextually valuable information first - Myles Andersson
+const APP_NAME = "cute and kawaii sticker sketchpad";
+const app = document.querySelector<HTMLDivElement>("#app")!;
+
+// adding app title in h1 element
+const header = document.createElement("h1");
+header.innerHTML = APP_NAME;
+app.append(header);
+
+// adding a canvas
+const canvas = document.createElement("canvas");
+canvas.id = "canvas";
+canvas.width = 256;
+canvas.height = 256;
+app.append(canvas);
+
+const ctx = canvas.getContext("2d");
+
+if (!ctx) {
+    throw new Error("no canvas context");
+}
+
+ctx.fillStyle = "pink";
+ctx.fillRect(10, 10, 150, 100);
+
 // creating new marker class
 class MarkerLine {
     private points: { x: number; y:number }[];
@@ -89,30 +114,6 @@ class Sticker {
     }
 }
 
-const APP_NAME = "cute and kawaii sticker sketchpad";
-const app = document.querySelector<HTMLDivElement>("#app")!;
-
-// adding app title in h1 element
-const header = document.createElement("h1");
-header.innerHTML = APP_NAME;
-app.append(header);
-
-// adding a canvas
-const canvas = document.createElement("canvas");
-canvas.id = "canvas";
-canvas.width = 256;
-canvas.height = 256;
-app.append(canvas);
-
-const ctx = canvas.getContext("2d");
-
-if (!ctx) {
-    throw new Error("no canvas context");
-}
-
-ctx.fillStyle = "pink";
-ctx.fillRect(10, 10, 150, 100);
-
 const colorPicker = document.createElement("input");
 colorPicker.type = "color";
 colorPicker.value = "#000000";
@@ -186,6 +187,34 @@ const stickerData = [
     { emoji: "🐾" },
 ];
 
+function clearAndRedraw() {
+    if (!ctx) return; // had to add so ctx errors go away
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "pink";
+    ctx.fillRect(10, 10, 150, 100); 
+
+    for (const line of lines) {
+        if(line instanceof MarkerLine) {
+            line.display(ctx);
+        } else if (line instanceof Sticker) {
+            line.draw(ctx);
+        }
+    }
+
+    if (currentLine) {
+        currentLine.display(ctx);
+    }
+
+    if (!isDrawing && toolPreview) {
+        toolPreview.draw(ctx);
+    }
+
+    if (currentSticker) {
+        currentSticker.draw(ctx);
+    }
+}
+
 stickerData.forEach(({ emoji }) => {
     const button = document.createElement("button");
     button.innerHTML = emoji;
@@ -221,34 +250,6 @@ customStickerButton.addEventListener("click", () => {
     }
 });
 app.append(customStickerButton);
-
-function clearAndRedraw() {
-    if (!ctx) return; // had to add so ctx errors go away
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "pink";
-    ctx.fillRect(10, 10, 150, 100); 
-
-    for (const line of lines) {
-        if(line instanceof MarkerLine) {
-            line.display(ctx);
-        } else if (line instanceof Sticker) {
-            line.draw(ctx);
-        }
-    }
-
-    if (currentLine) {
-        currentLine.display(ctx);
-    }
-
-    if (!isDrawing && toolPreview) {
-        toolPreview.draw(ctx);
-    }
-
-    if (currentSticker) {
-        currentSticker.draw(ctx);
-    }
-}
 
 // add a clear button
 const clearButton = document.createElement("button");
